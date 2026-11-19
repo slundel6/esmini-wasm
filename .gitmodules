@@ -1,4 +1,4 @@
 [submodule "esmini"]
 	path = esmini
 	url = https://github.com/slundel6/esmini.git
-    branch = master
+    branch = pr852
