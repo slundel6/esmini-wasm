@@ -1,0 +1,84 @@
+name: Publish esmini WASM app
+run-name: Publish esmini WASM from ${{ inputs.esmini_sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      esmini_sha:
+        description: Commit from slundel6/esmini pr852
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-esmini-wasm
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'slundel6/esmini-wasm' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Fetch esmini prototype branch
+        uses: actions/checkout@v6
+        with:
+          repository: slundel6/esmini
+          ref: refs/heads/pr852
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out the dispatched commit
+        env:
+          ESMINI_SHA: ${{ inputs.esmini_sha }}
+        run: |
+          if [[ ! "$ESMINI_SHA" =~ ^[0-9a-f]{40}$ ]] ||
+             ! git merge-base --is-ancestor "$ESMINI_SHA" HEAD; then
+            echo "::error::Expected a full commit SHA reachable from slundel6/esmini pr852."
+            exit 1
+          fi
+          git checkout --detach "$ESMINI_SHA"
+          git submodule update --init
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bzip2 cmake ninja-build patch
+
+      - name: Install Emscripten
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install 6.0.10
+          "$RUNNER_TEMP/emsdk/emsdk" activate 6.0.10
+
+      - name: Build esminiJS
+        working-directory: EnvironmentSimulator/Libraries/esminiJS
+        run: |
+          source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
+          ./build.sh
+          test -s ../../Applications/esmini-wasm/index.html
+          test -s ../../Applications/esmini-wasm/esmini.js
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: EnvironmentSimulator/Applications/esmini-wasm
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
