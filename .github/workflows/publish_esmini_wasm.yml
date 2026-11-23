@@ -1,12 +1,13 @@
 name: Publish esmini WASM app
-run-name: Publish esmini WASM from ${{ inputs.esmini_sha }}
+run-name: Publish esmini WASM from ${{ inputs.esmini_branch }}
 
 on:
   workflow_dispatch:
     inputs:
-      esmini_sha:
-        description: Commit from slundel6/esmini pr852
+      esmini_branch:
+        description: Branch in slundel6/esmini
         required: true
+        default: pr852
         type: string
 
 permissions:
@@ -30,15 +31,18 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Check out the dispatched commit
+      - name: Check out the requested source
         env:
-          ESMINI_SHA: ${{ inputs.esmini_sha }}
+          ESMINI_BRANCH: ${{ inputs.esmini_branch }}
         run: |
-          if [[ ! "$ESMINI_SHA" =~ ^[0-9a-f]{40}$ ]] ||
-             ! git merge-base --is-ancestor "$ESMINI_SHA" HEAD; then
-            echo "::error::Expected a full commit SHA reachable from slundel6/esmini pr852."
+          branch_ref="refs/remotes/origin/$ESMINI_BRANCH"
+          if ! git check-ref-format "refs/heads/$ESMINI_BRANCH" ||
+             ! git show-ref --verify --quiet "$branch_ref"; then
+            echo "::error::Branch not found in slundel6/esmini."
             exit 1
           fi
+          ESMINI_SHA=$(git rev-parse "$branch_ref^{commit}")
+          echo "Building esmini commit $ESMINI_SHA"
           git checkout --detach "$ESMINI_SHA"
           git submodule update --init
 
