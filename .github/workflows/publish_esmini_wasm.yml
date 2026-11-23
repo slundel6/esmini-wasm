@@ -13,6 +13,7 @@ on:
 permissions:
   contents: read
 
+# Prevent publish jobs from running at the same time. A new job will not cancel the on-going job.
 concurrency:
   group: publish-esmini-wasm
   cancel-in-progress: false
@@ -42,7 +43,7 @@ jobs:
             exit 1
           fi
           ESMINI_SHA=$(git rev-parse "$branch_ref^{commit}")
-          echo "Building esmini commit $ESMINI_SHA"
+          echo "Building esmini commit $ESMINI_SHA on branch $ESMINI_BRANCH"
           git checkout --detach "$ESMINI_SHA"
           git submodule update --init
 
