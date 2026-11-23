@@ -62,16 +62,12 @@ jobs:
         run: |
           source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
           ./build.sh
+          # Check that the paths exists, else the job stops
           test -s ../../Applications/esmini-wasm/index.html
           test -s ../../Applications/esmini-wasm/esmini.js
-
-      - name: Prepare bundled scenario resources
-        run: |
-          app_resources=EnvironmentSimulator/Applications/esmini-wasm/resources
-          mkdir -p "$app_resources/xosc" "$app_resources/xodr" "$app_resources/xosc/Catalogs/VehicleCatalog"
-          cp resources/xosc/wasm-example.xosc "$app_resources/xosc/"
-          cp resources/xodr/wasm-example.xodr "$app_resources/xodr/"
-          cp resources/xosc/Catalogs/Vehicles/VehicleCatalog.xosc "$app_resources/xosc/Catalogs/VehicleCatalog/"
+          test -s ../../Applications/esmini-wasm/resources/xosc/wasm-example.xosc
+          test -s ../../Applications/esmini-wasm/resources/xodr/wasm-example.xodr
+          test -s ../../Applications/esmini-wasm/resources/xosc/Catalogs/Vehicles/VehicleCatalog.xosc
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
