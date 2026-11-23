@@ -65,6 +65,14 @@ jobs:
           test -s ../../Applications/esmini-wasm/index.html
           test -s ../../Applications/esmini-wasm/esmini.js
 
+      - name: Prepare bundled scenario resources
+        run: |
+          app_resources=EnvironmentSimulator/Applications/esmini-wasm/resources
+          mkdir -p "$app_resources/xosc" "$app_resources/xodr" "$app_resources/Catalogs"
+          cp resources/xosc/cut-in.xosc "$app_resources/xosc/"
+          cp resources/xodr/e6mini.xodr "$app_resources/xodr/"
+          cp resources/xosc/Catalogs/Vehicles/VehicleCatalog.xosc "$app_resources/Catalogs/"
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
