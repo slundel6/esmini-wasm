@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       esmini_branch:
-        description: Branch in slundel6/esmini
+        description: Branch in esmini
         required: true
-        default: pr852
+        default: master
         type: string
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: slundel6/esmini
-          ref: refs/heads/pr852
+          ref: refs/heads/master
           fetch-depth: 0
           persist-credentials: false
 
